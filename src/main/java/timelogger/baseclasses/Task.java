@@ -20,25 +20,25 @@ public class Task {
 	private String comment;
 
 	public Task(String taskId) {
-		setTaskId(taskId);
+		this.setTaskId(taskId);
 	}
 
 	public Task(String taskId, int startHour, int endHour, String comment) {
-		setTaskId(taskId);
+		this.setTaskId(taskId);
 		int startHourNumber = startHour / 100;
 		int startMinuteNumber = startHour - startHourNumber;
-		setStartTime(startHourNumber, startMinuteNumber);
+		this.setStartTime(startHourNumber, startMinuteNumber);
 		int endHourNumber = endHour / 100;
 		int endMinuteNumber = endHour - endHourNumber;
-		setEndTime(endHourNumber, endMinuteNumber);
-		setComment(comment);
+		this.setEndTime(endHourNumber, endMinuteNumber);
+		this.setComment(comment);
 	}
 
 	public Task(String taskId, String startTimeString, String endTimeString, String comment) {
-		setTaskId(taskId);
-		setStartTime(startTimeString);
-		setEndTime(endTimeString);
-		setComment(comment);
+		this.setTaskId(taskId);
+		this.setStartTime(startTimeString);
+		this.setEndTime(endTimeString);
+		this.setComment(comment);
 	}
 
 	public long getMinPerTask() {
@@ -72,10 +72,6 @@ public class Task {
 			return true;
 		}
 		return false;
-	}
-
-	public boolean isMultipleQuarterHour() {
-		return getMinPerTask() % 15 == 0;
 	}
 
 	public void setTaskId(String taskId) {

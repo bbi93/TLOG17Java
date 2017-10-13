@@ -4,6 +4,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import timelogger.baseclasses.utils.Util;
 
 /**
  *
@@ -36,7 +37,7 @@ public class WorkMonth {
 	public void addWorkDay(WorkDay wd, boolean isWeekendEnabled) {
 		if (!days.contains(wd)) {
 			if (isSameMonth(wd)) {
-				if ((!wd.isWeekday() && isWeekendEnabled) || wd.isWeekday()) {
+				if ((!Util.isWeekday(wd.getActualDay()) && isWeekendEnabled) || Util.isWeekday(wd.getActualDay())) {
 					days.add(wd);
 				}
 			}

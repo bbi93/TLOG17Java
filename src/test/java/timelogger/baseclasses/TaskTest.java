@@ -60,20 +60,4 @@ public class TaskTest {
 		assertEquals(expResult, result);
 	}
 
-	@Test
-	public void testIsMultipleQuarterHour() {
-		Task instance = new Task("LT-1111", "08:30", "09:45", "test task");
-		boolean expResult = true;
-		boolean result = instance.isMultipleQuarterHour();
-		assertEquals(expResult, result);
-	}
-
-	@Test
-	public void testIsMultipleQuarterHour2() {
-		Task instance = new Task("LT-1111", "08:30", "09:40", "test task");
-		boolean expResult = false;
-		boolean result = instance.isMultipleQuarterHour();
-		assertEquals(expResult, result);
-	}
-
 }

@@ -42,22 +42,6 @@ public class WorkDayTest {
 	}
 
 	@Test
-	public void testIsSeparatedTime() {
-		Task t = new Task("LT-0005", "10:00", "11:00", "unique intervallum pass task");
-		boolean expResult = true;
-		boolean result = workDay.isSeparatedTime(t);
-		assertEquals(expResult, result);
-	}
-
-	@Test
-	public void testIsSeparatedTime2() {
-		Task t = new Task("LT-0006", "08:00", "09:00", "not unique intervallum fail task");
-		boolean expResult = false;
-		boolean result = workDay.isSeparatedTime(t);
-		assertEquals(expResult, result);
-	}
-
-	@Test
 	public void testAddTask() {
 		int beforeAdd=workDay.getTasks().size();
 		Task t = new Task("LT-0001", "10:00", "11:00", "must add");
@@ -81,13 +65,6 @@ public class WorkDayTest {
 		workDay.addTask(t);
 		int afterAdd=workDay.getTasks().size();
 		assertEquals(beforeAdd, afterAdd);
-	}
-
-	@Test
-	public void testIsWeekday() {
-		boolean expResult = true;
-		boolean result = workDay.isWeekday();
-		assertEquals(expResult, result);
 	}
 
 }

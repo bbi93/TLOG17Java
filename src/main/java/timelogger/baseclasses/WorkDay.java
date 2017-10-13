@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import timelogger.baseclasses.utils.Util;
 
 /**
  *
@@ -33,20 +34,16 @@ public class WorkDay {
 
 	public WorkDay(int year, int month, int day) {
 		this.setRequiredMinPerDay();
-		this.actualDay = LocalDate.of(year, month, day);
+		this.setActualDay(year, month, day);
 	}
 
 	public WorkDay(long requiredMinPerDay, int year, int month, int day) {
 		this.setRequiredMinPerDay(requiredMinPerDay);
-		this.actualDay = LocalDate.of(year, month, day);
+		this.setActualDay(year, month, day);
 	}
 
 	public long getSumPerDay() {
-		sumPerDay = 0;
-		for (Task task : tasks) {
-			sumPerDay += task.getMinPerTask();
-		}
-		return sumPerDay;
+		return tasks.stream().mapToLong(Task::getMinPerTask).sum();
 	}
 
 	private void setRequiredMinPerDay() {
@@ -74,38 +71,10 @@ public class WorkDay {
 		return getSumPerDay() - getRequiredMinPerDay();
 	}
 
-	public boolean isSeparatedTime(Task t) {
-		for (Task task : tasks) {
-			boolean tStartsBeforeTask = t.getStartTime().isBefore(task.getStartTime());
-			boolean tEndsBeforeTask = t.getEndTime().isBefore(task.getStartTime());
-			boolean tStartsAfterTask = t.getStartTime().isAfter(task.getEndTime());
-			boolean tEndsAfterTask = t.getEndTime().isAfter(task.getEndTime());
-			if (tStartsBeforeTask && !tEndsBeforeTask) {
-				return false;
-			}
-			if (tStartsAfterTask && !tEndsAfterTask) {
-				return false;
-			}
-			if (tStartsBeforeTask && tEndsAfterTask) {
-				return false;
-			}
-			if (tStartsAfterTask && tEndsBeforeTask) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	public void addTask(Task t) {
-		if (t.isMultipleQuarterHour() && isSeparatedTime(t)) {
+		if (Util.isMultipleQuarterHour(t.getMinPerTask()) && Util.isSeparatedTime(t, this.getTasks())) {
 			tasks.add(t);
 		}
-	}
-
-	public boolean isWeekday() {
-		boolean notSaturday = getActualDay().getDayOfWeek() != DayOfWeek.SATURDAY;
-		boolean notSunday = getActualDay().getDayOfWeek() != DayOfWeek.SUNDAY;
-		return notSaturday && notSunday;
 	}
 
 }
