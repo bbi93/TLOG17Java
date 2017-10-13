@@ -5,15 +5,13 @@
  */
 package timelogger.baseclasses;
 
-import java.time.LocalDate;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 /**
  *
- * @author precognox
+ * @author bbi93
  */
 public class WorkDayTest {
 

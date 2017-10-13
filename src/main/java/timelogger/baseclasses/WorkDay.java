@@ -13,18 +13,27 @@ import lombok.extern.java.Log;
  * @author bbi93
  */
 @Log
+@Getter
 public class WorkDay {
 
 	private List<Task> tasks = new ArrayList<>();
-	@Getter
 	private long requiredMinPerDay;
-	@Getter
 	private LocalDate actualDay;
 	private long sumPerDay;
+
+	public WorkDay(LocalDate actualDay) {
+		this.setRequiredMinPerDay();
+		this.setActualDay(actualDay);
+	}
 
 	public WorkDay(long requiredMinPerDay, LocalDate actualDay) {
 		this.setRequiredMinPerDay(requiredMinPerDay);
 		this.setActualDay(actualDay);
+	}
+
+	public WorkDay(int year, int month, int day) {
+		this.setRequiredMinPerDay();
+		this.actualDay = LocalDate.of(year, month, day);
 	}
 
 	public WorkDay(long requiredMinPerDay, int year, int month, int day) {
@@ -32,24 +41,20 @@ public class WorkDay {
 		this.actualDay = LocalDate.of(year, month, day);
 	}
 
-	public List<Task> getTasks() {
-		return tasks;
-	}
-
 	public long getSumPerDay() {
 		sumPerDay = 0;
 		for (Task task : tasks) {
-			sumPerDay = sumPerDay + task.getMinPerTask();
+			sumPerDay += task.getMinPerTask();
 		}
 		return sumPerDay;
 	}
 
+	private void setRequiredMinPerDay() {
+		this.setRequiredMinPerDay(450);
+	}
+
 	private void setRequiredMinPerDay(long requiredMinPerDay) {
-		if (requiredMinPerDay > 0) {
-			this.requiredMinPerDay = requiredMinPerDay;
-		} else {
-			this.requiredMinPerDay = 450;
-		}
+		this.requiredMinPerDay = requiredMinPerDay;
 	}
 
 	private void setActualDay(LocalDate actualDay) {

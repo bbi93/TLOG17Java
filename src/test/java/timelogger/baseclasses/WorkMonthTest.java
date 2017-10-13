@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author precognox
+ * @author bbi93
  */
 public class WorkMonthTest {
 

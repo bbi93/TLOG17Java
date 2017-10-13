@@ -19,29 +19,26 @@ public class Task {
 	private LocalTime endTime;
 	private String comment;
 
-	public Task(String taskId, LocalTime startTime, LocalTime endTime, String comment) {
-		this.taskId = taskId;
-		this.startTime = startTime;
-		this.endTime = endTime;
-		this.comment = comment;
+	public Task(String taskId) {
+		setTaskId(taskId);
 	}
 
 	public Task(String taskId, int startHour, int endHour, String comment) {
-		this.taskId = taskId;
+		setTaskId(taskId);
 		int startHourNumber = startHour / 100;
 		int startMinuteNumber = startHour - startHourNumber;
-		this.startTime = LocalTime.of(startHourNumber, startMinuteNumber);
+		setStartTime(startHourNumber, startMinuteNumber);
 		int endHourNumber = endHour / 100;
 		int endMinuteNumber = endHour - endHourNumber;
-		this.endTime = LocalTime.of(endHourNumber, endMinuteNumber);
-		this.comment = comment;
+		setEndTime(endHourNumber, endMinuteNumber);
+		setComment(comment);
 	}
 
 	public Task(String taskId, String startTimeString, String endTimeString, String comment) {
-		this.taskId = taskId;
-		this.startTime = LocalTime.parse(startTimeString);
-		this.endTime = LocalTime.parse(endTimeString);
-		this.comment = comment;
+		setTaskId(taskId);
+		setStartTime(startTimeString);
+		setEndTime(endTimeString);
+		setComment(comment);
 	}
 
 	public long getMinPerTask() {
@@ -50,27 +47,59 @@ public class Task {
 		return endTimeInMinutes - startTimeInMinutes;
 	}
 
-	public boolean isValidTaskId() {
-		Collection<Pattern> patternCollection = new LinkedList<>();
-		patternCollection.add(Pattern.compile("LT-\\d{4}"));
-		patternCollection.add(Pattern.compile("\\d{4}"));
-
-		for (Pattern pattern : patternCollection) {
-
-			Matcher matcher = pattern.matcher(taskId);
-
-			if (matcher.find()) {
-				if ((matcher.start() == 0) && (matcher.end() == taskId.length())) {
-					return true;
-				}
+	private boolean isValidLTTaskId() {
+		Matcher matcher = Pattern.compile("LT-\\d{4}").matcher(taskId);
+		if (matcher.find()) {
+			if ((matcher.start() == 0) && (matcher.end() == taskId.length())) {
+				return true;
 			}
 		}
+		return false;
+	}
 
+	private boolean isValidRedmineTaskId() {
+		Matcher matcher = Pattern.compile("\\d{4}").matcher(taskId);
+		if (matcher.find()) {
+			if ((matcher.start() == 0) && (matcher.end() == taskId.length())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isValidTaskId() {
+		if (isValidLTTaskId() || isValidRedmineTaskId()) {
+			return true;
+		}
 		return false;
 	}
 
 	public boolean isMultipleQuarterHour() {
 		return getMinPerTask() % 15 == 0;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+	public void setStartTime(int hour, int min) {
+		this.startTime = LocalTime.of(hour, min);
+	}
+
+	public void setStartTime(String startTime) {
+		this.startTime = LocalTime.parse(startTime);
+	}
+
+	public void setEndTime(int hour, int min) {
+		this.endTime = LocalTime.of(hour, min);
+	}
+
+	public void setEndTime(String endTime) {
+		this.endTime = LocalTime.parse(endTime);
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 
 }
