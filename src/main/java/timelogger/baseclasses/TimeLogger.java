@@ -6,14 +6,24 @@
 package timelogger.baseclasses;
 
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
 
 /**
  *
  * @author bbi93
  */
-@Data
+@Getter
 public class TimeLogger {
 
 	private List<WorkMonth> months;
+
+	public void addMonth(WorkMonth wm) {
+		if (isNewMonth(wm)) {
+			months.add(wm);
+		}
+	}
+
+	public boolean isNewMonth(WorkMonth wm) {
+		return months.stream().filter(m -> m.getDate().equals(wm.getDate())).count() == 0;
+	}
 }
