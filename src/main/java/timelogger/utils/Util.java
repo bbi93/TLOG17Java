@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package timelogger.baseclasses.utils;
+package timelogger.utils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

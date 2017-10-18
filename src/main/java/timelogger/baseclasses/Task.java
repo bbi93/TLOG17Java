@@ -1,8 +1,6 @@
 package timelogger.baseclasses;
 
 import java.time.LocalTime;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -39,6 +37,11 @@ public class Task {
 		this.setStartTime(startTimeString);
 		this.setEndTime(endTimeString);
 		this.setComment(comment);
+	}
+
+	@Override
+	public String toString() {
+		return "taskId=" + taskId + ", startTime=" + startTime + ", endTime=" + endTime + ", comment=" + comment;
 	}
 
 	public long getMinPerTask() {

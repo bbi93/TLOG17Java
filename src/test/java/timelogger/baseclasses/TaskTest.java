@@ -1,5 +1,6 @@
 package timelogger.baseclasses;
 
+import java.time.LocalTime;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

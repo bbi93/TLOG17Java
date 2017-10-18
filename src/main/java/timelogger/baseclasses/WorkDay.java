@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.extern.java.Log;
-import timelogger.baseclasses.utils.Util;
+import timelogger.utils.Util;
 
 /**
  *
@@ -75,6 +75,24 @@ public class WorkDay {
 		if (Util.isMultipleQuarterHour(t.getMinPerTask()) && Util.isSeparatedTime(t, this.getTasks())) {
 			tasks.add(t);
 		}
+	}
+
+	public Task getLatestTaskOfDay() {
+		List<Task> tasksInDay = this.getTasks();
+		if (tasksInDay.size() > 0) {
+			Task lastTask = tasksInDay.get(0);
+			for (Task task : tasksInDay) {
+				if (task.getEndTime().isAfter(lastTask.getEndTime())) {
+					lastTask = task;
+				}
+			}
+			return lastTask;
+		}
+		return null;
+	}
+
+	public String toStatistics() {
+		return actualDay + " Task number:" + tasks.size() + " Logged time:" + getSumPerDay() + " Extra time:" + getExtraMinPerDay() + ".";
 	}
 
 }
