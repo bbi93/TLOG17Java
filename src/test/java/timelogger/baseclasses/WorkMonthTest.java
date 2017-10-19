@@ -8,6 +8,7 @@ package timelogger.baseclasses;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import timelogger.exceptions.NotExpectedTimeOrderException;
 
 /**
  *
@@ -28,8 +29,8 @@ public class WorkMonthTest {
 	}
 
 	@Test
-	public void testGetExtraMinPerMonth() {
-		Task task=new Task("LT-1414", "09:00", "16:30", "test task");
+	public void testGetExtraMinPerMonth() throws Exception {
+		Task task = new Task("LT-1414", "09:00", "16:30", "test task");
 		for (WorkDay workDay : workMonth.getDays()) {
 			workDay.addTask(task);
 		}
@@ -39,7 +40,7 @@ public class WorkMonthTest {
 	}
 
 	@Test
-	public void testIsNewDate() {
+	public void testIsNewDate() throws Exception {
 		WorkDay wd = new WorkDay(2017, 10, 13);
 		boolean expResult = false;
 		boolean result = workMonth.isNewDate(wd);
@@ -47,7 +48,7 @@ public class WorkMonthTest {
 	}
 
 	@Test
-	public void testIsSameMonthPass() {
+	public void testIsSameMonthPass() throws Exception {
 		WorkDay wd = new WorkDay(2017, 10, 1);
 		boolean expResult = true;
 		boolean result = workMonth.isSameMonth(wd);
@@ -55,7 +56,7 @@ public class WorkMonthTest {
 	}
 
 	@Test
-	public void testIsSameMonthFail() {
+	public void testIsSameMonthFail() throws Exception {
 		WorkDay wd = new WorkDay(2017, 9, 1);
 		boolean expResult = false;
 		boolean result = workMonth.isSameMonth(wd);
@@ -63,7 +64,7 @@ public class WorkMonthTest {
 	}
 
 	@Test
-	public void testAddWorkDay_WorkDay_boolean() {
+	public void testAddWorkDay_WorkDay_boolean() throws Exception {
 		boolean isWeekendEnabled = true;
 		int beforeAdd = workMonth.getDays().size();
 		workMonth.addWorkDay(new WorkDay(2017, 10, 14), isWeekendEnabled);
@@ -72,7 +73,7 @@ public class WorkMonthTest {
 	}
 
 	@Test
-	public void testAddWorkDay_WorkDay() {
+	public void testAddWorkDay_WorkDay() throws Exception {
 		int beforeAdd = workMonth.getDays().size();
 		workMonth.addWorkDay(new WorkDay(2017, 10, 14));
 		int afterAdd = workMonth.getDays().size();

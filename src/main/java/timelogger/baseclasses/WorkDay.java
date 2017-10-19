@@ -5,8 +5,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import timelogger.exceptions.EmptyTimeFieldException;
 import timelogger.utils.Util;
 
 /**
@@ -43,7 +46,15 @@ public class WorkDay {
 	}
 
 	public long getSumPerDay() {
-		return tasks.stream().mapToLong(Task::getMinPerTask).sum();
+		long daySum = 0;
+		for (Task task : tasks) {
+			try {
+				daySum += task.getMinPerTask();
+			} catch (EmptyTimeFieldException ex) {
+				Logger.getLogger(WorkDay.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
+		return daySum;
 	}
 
 	private void setRequiredMinPerDay() {
@@ -72,8 +83,12 @@ public class WorkDay {
 	}
 
 	public void addTask(Task t) {
-		if (Util.isMultipleQuarterHour(t.getMinPerTask()) && Util.isSeparatedTime(t, this.getTasks())) {
-			tasks.add(t);
+		try {
+			if (Util.isMultipleQuarterHour(t.getMinPerTask()) && Util.isSeparatedTime(t, this.getTasks())) {
+				tasks.add(t);
+			}
+		} catch (EmptyTimeFieldException ex) {
+			Logger.getLogger(WorkDay.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 
@@ -82,8 +97,12 @@ public class WorkDay {
 		if (tasksInDay.size() > 0) {
 			Task lastTask = tasksInDay.get(0);
 			for (Task task : tasksInDay) {
-				if (task.getEndTime().isAfter(lastTask.getEndTime())) {
-					lastTask = task;
+				try {
+					if (task.getEndTime().isAfter(lastTask.getEndTime())) {
+						lastTask = task;
+					}
+				} catch (EmptyTimeFieldException ex) {
+					Logger.getLogger(WorkDay.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 			return lastTask;

@@ -8,6 +8,7 @@ package timelogger.baseclasses;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
+import timelogger.exceptions.NotExpectedTimeOrderException;
 
 /**
  *
@@ -28,42 +29,43 @@ public class WorkDayTest {
 	}
 
 	@Test
-	public void testGetSumPerDay() {
+	public void testGetSumPerDay() throws Exception {
 		long expResult = 90L;
 		long result = workDay.getSumPerDay();
 		assertEquals(expResult, result);
 	}
 
 	@Test
-	public void testGetExtraMinPerDay() {
+	public void testGetExtraMinPerDay() throws Exception {
 		long expResult = -210L;
 		long result = workDay.getExtraMinPerDay();
 		assertEquals(expResult, result);
 	}
 
 	@Test
-	public void testAddTask() {
-		int beforeAdd=workDay.getTasks().size();
+	public void testAddTask() throws Exception {
+		int beforeAdd = workDay.getTasks().size();
 		Task t = new Task("LT-0001", "10:00", "11:00", "must add");
 		workDay.addTask(t);
-		int afterAdd=workDay.getTasks().size();
-		assertEquals(beforeAdd+1, afterAdd);
+		int afterAdd = workDay.getTasks().size();
+		assertEquals(beforeAdd + 1, afterAdd);
 	}
+
 	@Test
-	public void testAddTask2() {
-		int beforeAdd=workDay.getTasks().size();
+	public void testAddTask2() throws Exception {
+		int beforeAdd = workDay.getTasks().size();
 		Task t = new Task("LT-0001", "10:00", "11:01", "mustn't add, not quarter");
 		workDay.addTask(t);
-		int afterAdd=workDay.getTasks().size();
+		int afterAdd = workDay.getTasks().size();
 		assertEquals(beforeAdd, afterAdd);
 	}
 
 	@Test
-	public void testAddTask3() {
-		int beforeAdd=workDay.getTasks().size();
+	public void testAddTask3() throws Exception {
+		int beforeAdd = workDay.getTasks().size();
 		Task t = new Task("LT-0001", "08:00", "09:00", "mustn't add not unique intervallum");
 		workDay.addTask(t);
-		int afterAdd=workDay.getTasks().size();
+		int afterAdd = workDay.getTasks().size();
 		assertEquals(beforeAdd, afterAdd);
 	}
 

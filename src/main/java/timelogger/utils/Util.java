@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collection;
 import timelogger.baseclasses.Task;
+import timelogger.exceptions.EmptyTimeFieldException;
 
 /**
  *
@@ -17,13 +18,20 @@ import timelogger.baseclasses.Task;
  */
 public class Util {
 
-	public static long roundToMultipleQuarterHour(LocalTime startTime, LocalTime endTime) {
+	public static LocalTime roundToMultipleQuarterHour(LocalTime startTime, LocalTime endTime) {
 		int timeDiffInMinutes = (endTime.toSecondOfDay() / 60) - (startTime.toSecondOfDay() / 60);
-		int mod = timeDiffInMinutes % 15;
-		return mod < 8 ? -mod : (15 - mod);
+		if (!isMultipleQuarterHour(timeDiffInMinutes)) {
+			long mod = timeDiffInMinutes % 15;
+			if (mod < 8) {
+				endTime=endTime.minusMinutes(mod);
+			} else {
+				endTime=endTime.plusMinutes(15 - mod);
+			}
+		}
+		return endTime;
 	}
 
-	public static boolean isSeparatedTime(Task t, Collection<Task> tasks) {
+	public static boolean isSeparatedTime(Task t, Collection<Task> tasks) throws EmptyTimeFieldException {
 		for (Task task : tasks) {
 			boolean tStartsBeforeTask = t.getStartTime().isBefore(task.getStartTime());
 			boolean tEndsBeforeTask = t.getEndTime().isBefore(task.getStartTime());

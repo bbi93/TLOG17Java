@@ -6,16 +6,23 @@
 package timelogger.ui;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import timelogger.baseclasses.Task;
 import timelogger.baseclasses.TimeLogger;
 import timelogger.baseclasses.WorkDay;
 import timelogger.baseclasses.WorkMonth;
+import timelogger.exceptions.EmptyTimeFieldException;
+import timelogger.exceptions.InvalidTaskIdException;
+import timelogger.exceptions.NoTaskIdException;
+import timelogger.exceptions.NotExpectedTimeOrderException;
 
 /**
  *
@@ -208,21 +215,35 @@ public class TimeLoggerUI {
 				String taskId = askForInputString("Input task id: ");
 				String taskComment = askForInputString("Input task comment: ");
 				Task lastTask = dayWithDayNumber.getLatestTaskOfDay();
-				String taskStartTime;
-				if (!lastTask.equals(null)) {
-					taskStartTime = askForInputString("Input task start (default:" + lastTask.getEndTime().getHour() + ":" + lastTask.getEndTime().getMinute() + "): ");
-					if (taskStartTime.isEmpty()) {
-						taskStartTime = lastTask.getEndTime().getHour() + ":" + lastTask.getEndTime().getMinute();
+				String taskStartTime = null;
+				try {
+					if (!lastTask.equals(null)) {
+						taskStartTime = askForInputString("Input task start (default:" + lastTask.getEndTime().getHour() + ":" + lastTask.getEndTime().getMinute() + "): ");
+						if (taskStartTime.isEmpty()) {
+							taskStartTime = lastTask.getEndTime().getHour() + ":" + lastTask.getEndTime().getMinute();
+						}
+					} else {
+						taskStartTime = askForInputString("Input task start (format HH:MM):");
+						if (taskStartTime.isEmpty()) {
+							taskStartTime = "00:00";
+						}
 					}
-				} else {
-					taskStartTime = askForInputString("Input task start (format HH:MM):");
-					if (taskStartTime.isEmpty()) {
-						taskStartTime = "00:00";
-					}
+				} catch (EmptyTimeFieldException ex) {
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
-				Task newTask = new Task(taskId);
-				newTask.setStartTime(taskStartTime);
-				newTask.setComment(taskComment);
+				Task newTask = null;
+				try {
+					newTask = new Task(taskId);
+					try {
+						newTask.setStartTime(taskStartTime);
+					} catch (EmptyTimeFieldException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+					}
+					newTask.setComment(taskComment);
+				} catch (Exception ex) {
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+				}
+
 				dayWithDayNumber.addTask(newTask);
 			} else {
 				System.err.println("No day available in this month.");
@@ -239,14 +260,25 @@ public class TimeLoggerUI {
 			if (monthWithMonthNumber.getDays().size() > 0) {
 				int dayNumber = askForInputInteger("Input day number: ");
 				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
-				List<Task> endlessTasks = dayWithDayNumber.getTasks().stream().filter((task) -> Objects.isNull(task.getEndTime())).collect(Collectors.toList());
+				List<Task> endlessTasks = new ArrayList<>();
+				for (Task task : dayWithDayNumber.getTasks()) {
+					try {
+						task.getEndTime();
+					} catch (EmptyTimeFieldException e) {
+						endlessTasks.add(task);
+					}
+				}
 				endlessTasks.stream().forEach((task) -> {
 					System.out.println(task.toString());
 				});
 				String taskId = askForInputString("Input task id: ");
 				Task choosenTask = endlessTasks.stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
 				if (!choosenTask.equals(null)) {
-					choosenTask.setEndTime(askForInputString("Input task start (format HH:MM):"));
+					try {
+						choosenTask.setEndTime(askForInputString("Input task start (format HH:MM):"));
+					} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+					}
 				} else {
 					System.err.println("No unfinished task available in this workday.");
 				}
@@ -304,19 +336,35 @@ public class TimeLoggerUI {
 						for (WorkDay day : month.getDays()) {
 							for (Task task : day.getTasks()) {
 								if (task.getTaskId().equals(choosenTask.getTaskId())) {
-									String newTaskId = askForInputString("Input task's new id: ");
-									newTaskId = newTaskId.isEmpty() ? choosenTask.getTaskId() : newTaskId;
-									String newTaskComment = askForInputString("Input task's new comment: ");
-									newTaskComment = newTaskComment.isEmpty() ? choosenTask.getComment() : newTaskComment;
-									String newTaskStartTime = askForInputString("Input task's new start time (format HH:MM):");
-									newTaskStartTime = newTaskStartTime.isEmpty() ? choosenTask.getStartTime().toString() : newTaskStartTime;
-									String newTaskEndTime = askForInputString("Input task's new end time (format HH:MM):");
-									newTaskEndTime = newTaskEndTime.isEmpty() ? choosenTask.getEndTime().toString() : newTaskEndTime;
-									task.setTaskId(newTaskId);
-									task.setComment(newTaskComment);
-									task.setStartTime(newTaskStartTime);
-									task.setEndTime(newTaskEndTime);
-								}throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+									try {
+										String newTaskId = askForInputString("Input task's new id: ");
+										newTaskId = newTaskId.isEmpty() ? choosenTask.getTaskId() : newTaskId;
+										String newTaskComment = askForInputString("Input task's new comment: ");
+										newTaskComment = newTaskComment.isEmpty() ? choosenTask.getComment() : newTaskComment;
+										String newTaskStartTime = askForInputString("Input task's new start time (format HH:MM):");
+										newTaskStartTime = newTaskStartTime.isEmpty() ? choosenTask.getStartTime().toString() : newTaskStartTime;
+										String newTaskEndTime = askForInputString("Input task's new end time (format HH:MM):");
+										newTaskEndTime = newTaskEndTime.isEmpty() ? choosenTask.getEndTime().toString() : newTaskEndTime;
+										try {
+											task.setTaskId(newTaskId);
+										} catch (InvalidTaskIdException | NoTaskIdException ex) {
+											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+										}
+										task.setComment(newTaskComment);
+										try {
+											task.setStartTime(newTaskStartTime);
+										} catch (EmptyTimeFieldException ex) {
+											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+										}
+										try {
+											task.setEndTime(newTaskEndTime);
+										} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
+											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+										}
+									} catch (EmptyTimeFieldException ex) {
+										Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+									}
+								}
 							}
 						}
 					}
@@ -335,17 +383,16 @@ public class TimeLoggerUI {
 		if (timelogger.getMonths().size() > 0) {
 			int monthNumber = askForInputInteger("Input month number: ");
 			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			System.out.println(monthNumber+
-				". month has "+monthWithMonthNumber.getDays().size()+" workdays. Required mins/Sum mins/Extra mins "+
-				monthWithMonthNumber.getRequiredMinPerMonth()+"/"+
-				monthWithMonthNumber.getSumPerMonth()+"/"+
-				monthWithMonthNumber.getExtraMinPerMonth());
+			System.out.println(monthNumber
+				+ ". month has " + monthWithMonthNumber.getDays().size() + " workdays. Required mins/Sum mins/Extra mins "
+				+ monthWithMonthNumber.getRequiredMinPerMonth() + "/"
+				+ monthWithMonthNumber.getSumPerMonth() + "/"
+				+ monthWithMonthNumber.getExtraMinPerMonth());
 			System.out.println("Days statistics:");
 			for (WorkDay workDay : monthWithMonthNumber.getDays()) {
 				System.out.println(workDay.toStatistics());
 			}
-		}
-		else {
+		} else {
 			System.err.println("No month available.");
 		}
 	}
