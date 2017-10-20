@@ -56,8 +56,8 @@ public class Task {
 	}
 
 	public long getMinPerTask() throws EmptyTimeFieldException {
-		long endTimeInMinutes = (this.getEndTime().getHour() * 60) + (this.getEndTime().getMinute());
 		long startTimeInMinutes = (this.getStartTime().getHour() * 60) + (this.getStartTime().getMinute());
+		long endTimeInMinutes = (this.getEndTime().getHour() * 60) + (this.getEndTime().getMinute());
 		return endTimeInMinutes - startTimeInMinutes;
 	}
 
@@ -138,7 +138,7 @@ public class Task {
 				throw new NotExpectedTimeOrderException("Task cannot be ended before it starts.");
 			}
 		} else {
-			throw new EmptyTimeFieldException("Start time field cannot be empty.");
+			throw new EmptyTimeFieldException("End time field cannot be empty.");
 		}
 	}
 
@@ -169,12 +169,12 @@ public class Task {
 	}
 
 	public String getTaskId() {
-		return taskId;
+		return this.taskId;
 	}
 
 	public LocalTime getStartTime() throws EmptyTimeFieldException {
 		if (this.startTime != null) {
-			return startTime;
+			return this.startTime;
 		} else {
 			throw new EmptyTimeFieldException("Starttime not setted yet.");
 		}
@@ -182,14 +182,14 @@ public class Task {
 
 	public LocalTime getEndTime() throws EmptyTimeFieldException {
 		if (this.endTime != null) {
-			return endTime;
+			return this.endTime;
 		} else {
 			throw new EmptyTimeFieldException("Endtime not setted yet.");
 		}
 	}
 
 	public String getComment() {
-		return comment;
+		return this.comment;
 	}
 
 }

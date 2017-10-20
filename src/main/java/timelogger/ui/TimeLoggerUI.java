@@ -1,28 +1,27 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package timelogger.ui;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import timelogger.baseclasses.FutureWorkException;
 import timelogger.baseclasses.Task;
 import timelogger.baseclasses.TimeLogger;
 import timelogger.baseclasses.WorkDay;
 import timelogger.baseclasses.WorkMonth;
 import timelogger.exceptions.EmptyTimeFieldException;
 import timelogger.exceptions.InvalidTaskIdException;
+import timelogger.exceptions.NegativeMinutesOfWorkException;
+import timelogger.exceptions.NoTaskDeclaredException;
 import timelogger.exceptions.NoTaskIdException;
 import timelogger.exceptions.NotExpectedTimeOrderException;
+import timelogger.exceptions.NotSeparatedTimesException;
+import timelogger.exceptions.WeekendNotEnabledException;
 
 /**
  *
@@ -196,9 +195,17 @@ public class TimeLoggerUI {
 				int dayNumber = askForInputInteger("Input day: ");
 				double requiredWorkingHours = askForInputDouble("Input working hours (default=7.5): ");
 				if (requiredWorkingHours <= 0) {
-					month.addWorkDay(new WorkDay(month.getDate().getYear(), rowNumber, dayNumber));
+					try {
+						month.addWorkDay(new WorkDay(month.getDate().getYear(), rowNumber, dayNumber));
+					} catch (NegativeMinutesOfWorkException | DateTimeException | FutureWorkException | WeekendNotEnabledException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+					}
 				} else {
-					month.addWorkDay(new WorkDay(Math.round(requiredWorkingHours * 60), month.getDate().getYear(), rowNumber, dayNumber));
+					try {
+						month.addWorkDay(new WorkDay(Math.round(requiredWorkingHours * 60), month.getDate().getYear(), rowNumber, dayNumber));
+					} catch (NegativeMinutesOfWorkException | DateTimeException | FutureWorkException | WeekendNotEnabledException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+					}
 				}
 
 			}
@@ -214,7 +221,12 @@ public class TimeLoggerUI {
 				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
 				String taskId = askForInputString("Input task id: ");
 				String taskComment = askForInputString("Input task comment: ");
-				Task lastTask = dayWithDayNumber.getLatestTaskOfDay();
+				Task lastTask = null;
+				try {
+					lastTask = dayWithDayNumber.getLatestTaskOfDay();
+				} catch (NoTaskDeclaredException ex) {
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+				}
 				String taskStartTime = null;
 				try {
 					if (!lastTask.equals(null)) {
@@ -244,7 +256,11 @@ public class TimeLoggerUI {
 					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
 
-				dayWithDayNumber.addTask(newTask);
+				try {
+					dayWithDayNumber.addTask(newTask);
+				} catch (NotSeparatedTimesException | EmptyTimeFieldException ex) {
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+				}
 			} else {
 				System.err.println("No day available in this month.");
 			}
@@ -383,14 +399,22 @@ public class TimeLoggerUI {
 		if (timelogger.getMonths().size() > 0) {
 			int monthNumber = askForInputInteger("Input month number: ");
 			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			System.out.println(monthNumber
-				+ ". month has " + monthWithMonthNumber.getDays().size() + " workdays. Required mins/Sum mins/Extra mins "
-				+ monthWithMonthNumber.getRequiredMinPerMonth() + "/"
-				+ monthWithMonthNumber.getSumPerMonth() + "/"
-				+ monthWithMonthNumber.getExtraMinPerMonth());
+			try {
+				System.out.println(monthNumber
+					+ ". month has " + monthWithMonthNumber.getDays().size() + " workdays. Required mins/Sum mins/Extra mins "
+					+ monthWithMonthNumber.getRequiredMinPerMonth() + "/"
+					+ monthWithMonthNumber.getSumPerMonth() + "/"
+					+ monthWithMonthNumber.getExtraMinPerMonth());
+			} catch (EmptyTimeFieldException ex) {
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+			}
 			System.out.println("Days statistics:");
 			for (WorkDay workDay : monthWithMonthNumber.getDays()) {
-				System.out.println(workDay.toStatistics());
+				try {
+					System.out.println(workDay.toStatistics());
+				} catch (EmptyTimeFieldException ex) {
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+				}
 			}
 		} else {
 			System.err.println("No month available.");

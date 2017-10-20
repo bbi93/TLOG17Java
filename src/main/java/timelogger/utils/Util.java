@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package timelogger.utils;
 
 import java.time.DayOfWeek;
@@ -33,22 +28,21 @@ public class Util {
 
 	public static boolean isSeparatedTime(Task t, Collection<Task> tasks) throws EmptyTimeFieldException {
 		for (Task task : tasks) {
-			boolean tStartsBeforeTask = t.getStartTime().isBefore(task.getStartTime());
-			boolean tEndsBeforeTask = t.getEndTime().isBefore(task.getStartTime());
-			boolean tStartsAfterTask = t.getStartTime().isAfter(task.getEndTime());
-			boolean tEndsAfterTask = t.getEndTime().isAfter(task.getEndTime());
-			if (tStartsBeforeTask && !tEndsBeforeTask) {
-				return false;
-			}
-			if (tStartsAfterTask && !tEndsAfterTask) {
-				return false;
-			}
-			if (tStartsBeforeTask && tEndsAfterTask) {
-				return false;
-			}
-			if (tStartsAfterTask && tEndsBeforeTask) {
-				return false;
-			}
+			//if task starts when other task starts
+			if(t.getStartTime().equals(task.getStartTime()))
+			{return false;}
+			//if task ends when other task ends
+			if(t.getEndTime().equals(task.getEndTime()))
+			{return false;}
+			//if starttime inside other task
+			if(t.getStartTime().isAfter(task.getStartTime()) && t.getStartTime().isBefore(task.getEndTime()))
+			{return false;}
+			//if endtime inside other task
+			if(t.getEndTime().isAfter(task.getStartTime()) && t.getEndTime().isBefore(task.getEndTime()))
+			{return false;}
+			//if task is around of other task
+			if(t.getStartTime().isBefore(task.getStartTime()) && t.getEndTime().isAfter(task.getEndTime()))
+			{return false;}
 		}
 		return true;
 	}

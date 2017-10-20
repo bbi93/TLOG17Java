@@ -14,9 +14,6 @@ import timelogger.exceptions.NoTaskIdException;
  */
 public class TaskTest {
 
-	public TaskTest() {
-	}
-
 	@Test(expected = NotExpectedTimeOrderException.class)
 	public void testTaskCreationWithBadOrderedTimeValues() throws Exception {
 		Task badTask = new Task("1542", "08:45", "07:30", "task comment");
@@ -34,6 +31,7 @@ public class TaskTest {
 		long result = instance.getMinPerTask();
 		assertEquals(expResult, result);
 	}
+
 	@Test(expected = EmptyTimeFieldException.class)
 	public void testGetMinPerTaskWithEmptyTimes() throws Exception {
 		Task instance = new Task("LT-1111");

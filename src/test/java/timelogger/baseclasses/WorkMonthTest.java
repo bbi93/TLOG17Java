@@ -1,14 +1,10 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package timelogger.baseclasses;
 
-import org.junit.BeforeClass;
+import java.time.LocalDate;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import timelogger.exceptions.NotExpectedTimeOrderException;
+import timelogger.exceptions.EmptyTimeFieldException;
+import timelogger.exceptions.WeekendNotEnabledException;
 
 /**
  *
@@ -16,69 +12,101 @@ import timelogger.exceptions.NotExpectedTimeOrderException;
  */
 public class WorkMonthTest {
 
-	private static WorkMonth workMonth;
-
-	public WorkMonthTest() {
-	}
-
-	@BeforeClass
-	public static void setUpClass() {
-		workMonth = new WorkMonth(2017, 10);
-		workMonth.addWorkDay(new WorkDay(2017, 10, 12));
-		workMonth.addWorkDay(new WorkDay(2017, 10, 13));
+	@Test
+	public void testgetSumPerMonth() throws Exception {
+		Task task1 = new Task("2154", "07:30", "08:45", "comment");
+		Task task2 = new Task("2155", "08:45", "09:45", "comment");
+		WorkDay wd1 = new WorkDay(420);
+		wd1.addTask(task1);
+		WorkDay wd2 = new WorkDay(420, LocalDate.of(2017, 10, 2));
+		wd2.addTask(task2);
+		WorkMonth wm = new WorkMonth(2017, 10);
+		wm.addWorkDay(wd1);
+		wm.addWorkDay(wd2);
+		long expected = 135;
+		assertEquals(expected, wm.getSumPerMonth());
 	}
 
 	@Test
-	public void testGetExtraMinPerMonth() throws Exception {
-		Task task = new Task("LT-1414", "09:00", "16:30", "test task");
-		for (WorkDay workDay : workMonth.getDays()) {
-			workDay.addTask(task);
-		}
-		long expResult = 0L;
-		long result = workMonth.getExtraMinPerMonth();
-		assertEquals(expResult, result);
+	public void testgetSumPerMonthWithZeroDay() throws Exception {
+		WorkMonth wm = new WorkMonth(2017, 10);
+		long expected = 0;
+		assertEquals(expected, wm.getSumPerMonth());
 	}
 
 	@Test
-	public void testIsNewDate() throws Exception {
-		WorkDay wd = new WorkDay(2017, 10, 13);
-		boolean expResult = false;
-		boolean result = workMonth.isNewDate(wd);
-		assertEquals(expResult, result);
+	public void testgetExtraMinPerMonth() throws Exception {
+		Task task1 = new Task("2154", "07:30", "08:45", "comment");
+		Task task2 = new Task("2155", "08:45", "09:45", "comment");
+		WorkDay wd1 = new WorkDay(420);
+		wd1.addTask(task1);
+		WorkDay wd2 = new WorkDay(420, LocalDate.of(2017, 10, 2));
+		wd2.addTask(task2);
+		WorkMonth wm = new WorkMonth(2017, 10);
+		wm.addWorkDay(wd1);
+		wm.addWorkDay(wd2);
+		long expected = -705;
+		assertEquals(expected, wm.getExtraMinPerMonth());
 	}
 
 	@Test
-	public void testIsSameMonthPass() throws Exception {
-		WorkDay wd = new WorkDay(2017, 10, 1);
-		boolean expResult = true;
-		boolean result = workMonth.isSameMonth(wd);
-		assertEquals(expResult, result);
+	public void testgetExtraMinPerMonthWithZeroDay() throws Exception {
+		WorkMonth wm = new WorkMonth(2017, 10);
+		long expected = 0;
+		assertEquals(expected, wm.getExtraMinPerMonth());
 	}
 
 	@Test
-	public void testIsSameMonthFail() throws Exception {
-		WorkDay wd = new WorkDay(2017, 9, 1);
-		boolean expResult = false;
-		boolean result = workMonth.isSameMonth(wd);
-		assertEquals(expResult, result);
+	public void testgetRequiredMinPerMonth() throws Exception {
+		WorkMonth wm = new WorkMonth(LocalDate.now().getYear(), LocalDate.now().getMonthValue());
+		wm.addWorkDay(new WorkDay(420));
+		wm.addWorkDay(new WorkDay(420));
+		long expected = 840;
+		assertEquals(expected, wm.getRequiredMinPerMonth());
 	}
 
 	@Test
-	public void testAddWorkDay_WorkDay_boolean() throws Exception {
-		boolean isWeekendEnabled = true;
-		int beforeAdd = workMonth.getDays().size();
-		workMonth.addWorkDay(new WorkDay(2017, 10, 14), isWeekendEnabled);
-		int afterAdd = workMonth.getDays().size();
-		assertEquals(beforeAdd + 1, afterAdd);
+	public void testgetRequiredMinPerMonthZero() throws Exception {
+		WorkMonth wm = new WorkMonth(LocalDate.now().getYear(), LocalDate.now().getMonthValue());
+		long expected = 0;
+		assertEquals(expected, wm.getRequiredMinPerMonth());
 	}
 
-	@Test
-	public void testAddWorkDay_WorkDay() throws Exception {
-		int beforeAdd = workMonth.getDays().size();
-		workMonth.addWorkDay(new WorkDay(2017, 10, 14));
-		int afterAdd = workMonth.getDays().size();
-		assertEquals(beforeAdd, afterAdd);
+	@Test(expected = WeekendNotEnabledException.class)
+	public void testsumDayAndMonth() throws Exception {
+		Task task1 = new Task("2154", "07:30", "08:45", "comment");
+		WorkDay wd1 = new WorkDay(LocalDate.of(2016, 8, 28));
+		wd1.addTask(task1);
+		WorkMonth wm = new WorkMonth(2016, 8);
+		wm.addWorkDay(wd1);
+	}
 
+	@Test(expected = EmptyTimeFieldException.class)
+	public void testgetSumPerMonthWithEmptyTime() throws Exception {
+		Task task1 = new Task("2154", "07:30", "08:45", "comment");
+		Task task2 = new Task("2155", "08:45", "", "comment");
+		WorkDay wd1 = new WorkDay(420);
+		wd1.addTask(task1);
+		WorkDay wd2 = new WorkDay(420, LocalDate.of(2017, 10, 2));
+		wd2.addTask(task2);
+		WorkMonth wm = new WorkMonth(2017, 10);
+		wm.addWorkDay(wd1);
+		wm.addWorkDay(wd2);
+		wm.getSumPerMonth();
+	}
+
+	@Test(expected = EmptyTimeFieldException.class)
+	public void testgetExtraMinPerMonthWithEmptyTime() throws Exception {
+		Task task1 = new Task("2154", "07:30", "08:45", "comment");
+		Task task2 = new Task("2155", "08:45", "", "comment");
+		WorkDay wd1 = new WorkDay(420);
+		wd1.addTask(task1);
+		WorkDay wd2 = new WorkDay(420, LocalDate.of(2017, 10, 2));
+		wd2.addTask(task2);
+		WorkMonth wm = new WorkMonth(2017, 10);
+		wm.addWorkDay(wd1);
+		wm.addWorkDay(wd2);
+		wm.getExtraMinPerMonth();
 	}
 
 }
