@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.util.Collection;
 import timelogger.baseclasses.Task;
 import timelogger.exceptions.EmptyTimeFieldException;
+import timelogger.exceptions.NotExpectedTimeOrderException;
 
 /**
  *
@@ -18,9 +19,9 @@ public class Util {
 		if (!isMultipleQuarterHour(timeDiffInMinutes)) {
 			long mod = timeDiffInMinutes % 15;
 			if (mod < 8) {
-				endTime=endTime.minusMinutes(mod);
+				endTime = endTime.minusMinutes(mod);
 			} else {
-				endTime=endTime.plusMinutes(15 - mod);
+				endTime = endTime.plusMinutes(15 - mod);
 			}
 		}
 		return endTime;
@@ -29,20 +30,25 @@ public class Util {
 	public static boolean isSeparatedTime(Task t, Collection<Task> tasks) throws EmptyTimeFieldException {
 		for (Task task : tasks) {
 			//if task starts when other task starts
-			if(t.getStartTime().equals(task.getStartTime()))
-			{return false;}
+			if (t.getStartTime().equals(task.getStartTime())) {
+				return false;
+			}
 			//if task ends when other task ends
-			if(t.getEndTime().equals(task.getEndTime()))
-			{return false;}
+			if (t.getEndTime().equals(task.getEndTime())) {
+				return false;
+			}
 			//if starttime inside other task
-			if(t.getStartTime().isAfter(task.getStartTime()) && t.getStartTime().isBefore(task.getEndTime()))
-			{return false;}
+			if (t.getStartTime().isAfter(task.getStartTime()) && t.getStartTime().isBefore(task.getEndTime())) {
+				return false;
+			}
 			//if endtime inside other task
-			if(t.getEndTime().isAfter(task.getStartTime()) && t.getEndTime().isBefore(task.getEndTime()))
-			{return false;}
+			if (t.getEndTime().isAfter(task.getStartTime()) && t.getEndTime().isBefore(task.getEndTime())) {
+				return false;
+			}
 			//if task is around of other task
-			if(t.getStartTime().isBefore(task.getStartTime()) && t.getEndTime().isAfter(task.getEndTime()))
-			{return false;}
+			if (t.getStartTime().isBefore(task.getStartTime()) && t.getEndTime().isAfter(task.getEndTime())) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -55,6 +61,17 @@ public class Util {
 
 	public static boolean isMultipleQuarterHour(long taskMinutes) {
 		return taskMinutes % 15 == 0;
+	}
+
+	public static boolean isMultipleQuarterHour(LocalTime startTime, LocalTime endTime) throws NotExpectedTimeOrderException, EmptyTimeFieldException {
+		if (startTime == null || endTime == null) {
+			throw new EmptyTimeFieldException("Some time field is not setted.");
+		} else if (startTime.isBefore(endTime)) {
+			int taskMinutes = (endTime.toSecondOfDay() / 60) - (startTime.toSecondOfDay() / 60);
+			return Util.isMultipleQuarterHour(taskMinutes);
+		} else {
+			throw new NotExpectedTimeOrderException("Bad time order.");
+		}
 	}
 
 }

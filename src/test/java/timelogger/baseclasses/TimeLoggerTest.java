@@ -1,41 +1,23 @@
 package timelogger.baseclasses;
 
-import java.util.List;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
  *
- * @author precognox
+ * @author bbi93
  */
 public class TimeLoggerTest {
 
-	public TimeLoggerTest() {
-	}
-
-	@BeforeClass
-	public static void setUpClass() {
-	}
-
 	@Test
 	public void testAddMonth() {
-		System.out.println("addMonth");
-		WorkMonth wm = null;
+		WorkMonth wm = new WorkMonth(2017, 11);
+		WorkMonth wm2 = new WorkMonth(2017, 11);
 		TimeLogger instance = new TimeLogger();
+		int expResult = 1;
 		instance.addMonth(wm);
-		fail("The test case is a prototype.");
-	}
-
-	@Test
-	public void testIsNewMonth() {
-		System.out.println("isNewMonth");
-		WorkMonth wm = new WorkMonth(0, 0);
-		TimeLogger instance = new TimeLogger();
-		boolean expResult = false;
-		boolean result = instance.isNewMonth(wm);
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
+		instance.addMonth(wm2);
+		assertEquals(expResult, instance.getMonths().size());
 	}
 
 }
