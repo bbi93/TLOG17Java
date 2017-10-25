@@ -38,30 +38,50 @@ public class WorkMonth {
 		return extramin;
 	}
 
+	/**
+	 *
+	 * @return long Returns with sum of all task's elapsed time in minutes in all workday.
+	 * @throws EmptyTimeFieldException On actual workDay's task list has task which has unsetted time field.
+	 */
 	public long getSumPerMonth() throws EmptyTimeFieldException {
-		long monthsum = 0;
+		sumPerMonth = 0;
 		for (WorkDay day : days) {
-			monthsum += day.getSumPerDay();
+			sumPerMonth += day.getSumPerDay();
 		}
-		return monthsum;
+		return sumPerMonth;
 	}
 
 	public long getRequiredMinPerMonth() {
-		long requiredMonthSum = 0;
+		requiredMinPerMonth = 0;
 		for (WorkDay day : days) {
-			requiredMonthSum += day.getRequiredMinPerDay();
+			requiredMinPerMonth += day.getRequiredMinPerDay();
 		}
-		return requiredMonthSum;
+		return requiredMinPerMonth;
 	}
 
+	/**
+	 *
+	 * @param wd Workday to check.
+	 * @return boolean Return true if workday list not contains workday which has conflict date conflict.
+	 */
 	public boolean isNewDate(WorkDay wd) {
 		return days.stream().filter(d -> d.getActualDay().isEqual(wd.getActualDay())).count() == 0;
 	}
 
+	/**
+	 *
+	 * @param wd Workday to check.
+	 * @return boolean Return true if workday month value equals with the workmonth's month value.
+	 */
 	public boolean isSameMonth(WorkDay wd) {
 		return date.getMonth() == wd.getActualDay().getMonth();
 	}
 
+	/**
+	 *
+	 * @param wd Workday to add.
+	 * @throws WeekendNotEnabledException If isWeekendEnabled is false and the given workday is on weekend.
+	 */
 	public void addWorkDay(WorkDay wd) throws WeekendNotEnabledException {
 		if (!days.contains(wd)) {
 			if (isSameMonth(wd)) {
