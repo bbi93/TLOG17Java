@@ -7,6 +7,7 @@ import timelogger.exceptions.NotExpectedTimeOrderException;
 import java.time.LocalTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Getter;
 import timelogger.exceptions.EmptyTimeFieldException;
 import timelogger.utils.Util;
 
@@ -14,6 +15,7 @@ import timelogger.utils.Util;
  *
  * @author bbi93
  */
+@Getter
 public class Task {
 
 	private String taskId;
@@ -55,12 +57,21 @@ public class Task {
 		return "taskId=" + taskId + ", startTime=" + startTime + ", endTime=" + endTime + ", comment=" + comment;
 	}
 
+	/**
+	 *
+	 * @return long Elapsed time in minutes between startTime and endTime
+	 * @throws EmptyTimeFieldException
+	 */
 	public long getMinPerTask() throws EmptyTimeFieldException {
 		long startTimeInMinutes = (this.getStartTime().getHour() * 60) + (this.getStartTime().getMinute());
 		long endTimeInMinutes = (this.getEndTime().getHour() * 60) + (this.getEndTime().getMinute());
 		return endTimeInMinutes - startTimeInMinutes;
 	}
 
+	/**
+	 *
+	 * @return boolean Returns true, if taskId matches pattern.
+	 */
 	private boolean isValidLTTaskId() {
 		Matcher matcher = Pattern.compile("LT-\\d{4}").matcher(taskId);
 		if (matcher.find()) {
@@ -71,6 +82,10 @@ public class Task {
 		return false;
 	}
 
+	/**
+	 *
+	 * @return boolean Returns true, if taskId matches pattern.
+	 */
 	private boolean isValidRedmineTaskId() {
 		Matcher matcher = Pattern.compile("\\d{4}").matcher(taskId);
 		if (matcher.find()) {
@@ -81,6 +96,10 @@ public class Task {
 		return false;
 	}
 
+	/**
+	 *
+	 * @return boolean Returns true, if isValidLTTaskId or isValidRedmineTaskId is true.
+	 */
 	public boolean isValidTaskId() {
 		if (isValidLTTaskId() || isValidRedmineTaskId()) {
 			return true;
@@ -150,6 +169,13 @@ public class Task {
 		}
 	}
 
+	/**
+	 *
+	 * @param hour
+	 * @param min
+	 * @return String Returns "hh:mm" formatted string from hour and minute integer
+	 * @throws ImpossibleTimeException Throws exception, when hour is not 0-23, or minute is not 0-59
+	 */
 	private String formatStringFromIntegerTime(int hour, int min) throws ImpossibleTimeException {
 		if (hour >= 0 && hour < 24 && min >= 0 && min < 60) {
 			StringBuilder sb = new StringBuilder(5);
@@ -168,10 +194,6 @@ public class Task {
 		}
 	}
 
-	public String getTaskId() {
-		return this.taskId;
-	}
-
 	public LocalTime getStartTime() throws EmptyTimeFieldException {
 		if (this.startTime != null) {
 			return this.startTime;
@@ -186,10 +208,6 @@ public class Task {
 		} else {
 			throw new EmptyTimeFieldException("Endtime not setted yet.");
 		}
-	}
-
-	public String getComment() {
-		return this.comment;
 	}
 
 }
