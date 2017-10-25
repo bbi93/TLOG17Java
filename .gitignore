@@ -1,7 +1,11 @@
 nbproject/
-build/
+/build/
 nbbuild/
 dist/
 nbdist/
 .nb-gradle/
 .gradle/
+# Ignore Gradle GUI config
+gradle-app.setting
+# Cache of project
+.gradletasknamecache
