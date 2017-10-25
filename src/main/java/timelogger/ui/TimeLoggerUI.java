@@ -9,7 +9,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import timelogger.baseclasses.FutureWorkException;
+import timelogger.exceptions.FutureWorkException;
 import timelogger.baseclasses.Task;
 import timelogger.baseclasses.TimeLogger;
 import timelogger.baseclasses.WorkDay;

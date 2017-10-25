@@ -14,6 +14,12 @@ import timelogger.exceptions.NotExpectedTimeOrderException;
  */
 public class Util {
 
+	/**
+	 * This method rounds given endtine to quarter hour.
+	 * @param startTime LocalTime of task's start time.
+	 * @param endTime LocalTime of task's end time. This will be rounded.
+	 * @return LocalTime Returns the new rounded endTime.
+	 */
 	public static LocalTime roundToMultipleQuarterHour(LocalTime startTime, LocalTime endTime) {
 		int timeDiffInMinutes = (endTime.toSecondOfDay() / 60) - (startTime.toSecondOfDay() / 60);
 		if (!isMultipleQuarterHour(timeDiffInMinutes)) {
@@ -27,6 +33,13 @@ public class Util {
 		return endTime;
 	}
 
+	/**
+	 * This method check t task param has unique and conflict-free time values.
+	 * @param t Task to check.
+	 * @param tasks Task list where search for same values like t task.
+	 * @return boolean Returns true if t task is conflict-free.
+	 * @throws EmptyTimeFieldException On any task has unsetted time field.
+	 */
 	public static boolean isSeparatedTime(Task t, Collection<Task> tasks) throws EmptyTimeFieldException {
 		for (Task task : tasks) {
 			//if task starts when other task starts
@@ -53,16 +66,34 @@ public class Util {
 		return true;
 	}
 
+	/**
+	 * Check given localdate parameter is a weekend.
+	 * @param actualDay The date to check.
+	 * @return boolean Returns true if localdate parameter equals DayOfWeek.SATURDAY or DayOfWeek.SUNDAY enums.
+	 */
 	public static boolean isWeekday(LocalDate actualDay) {
-		boolean notSaturday = actualDay.getDayOfWeek() != DayOfWeek.SATURDAY;
+		boolean notSaturday = actualDay.getDayOfWeek()!= DayOfWeek.SATURDAY;
 		boolean notSunday = actualDay.getDayOfWeek() != DayOfWeek.SUNDAY;
 		return notSaturday && notSunday;
 	}
 
+	/**
+	 *
+	 * @param taskMinutes
+	 * @return boolean Returns true, if long parameter MOD 15 is zero.
+	 */
 	public static boolean isMultipleQuarterHour(long taskMinutes) {
 		return taskMinutes % 15 == 0;
 	}
 
+	/**
+	 * Calculate the interval of the params in minutes and check the long value can be divide with 15 without remainder.
+	 * @param startTime
+	 * @param endTime
+	 * @return Returns true, if long parameter MOD 15 is zero.
+	 * @throws NotExpectedTimeOrderException On end time is before start time.
+	 * @throws EmptyTimeFieldException On some of time fields is unsetted.
+	 */
 	public static boolean isMultipleQuarterHour(LocalTime startTime, LocalTime endTime) throws NotExpectedTimeOrderException, EmptyTimeFieldException {
 		if (startTime == null || endTime == null) {
 			throw new EmptyTimeFieldException("Some time field is not setted.");

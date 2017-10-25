@@ -1,5 +1,6 @@
 package timelogger.baseclasses;
 
+import timelogger.exceptions.FutureWorkException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import timelogger.exceptions.NegativeMinutesOfWorkException;

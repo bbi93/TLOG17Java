@@ -56,7 +56,7 @@ public class WorkDay {
 
 	/**
 	 *
-	 * @return long Returns with sum fo all tasks elapsed time in minutes.
+	 * @return long Returns with sum of all tasks elapsed time in minutes.
 	 * @throws EmptyTimeFieldException On some task one or both time field is empty.
 	 */
 	public long getSumPerDay() throws EmptyTimeFieldException {

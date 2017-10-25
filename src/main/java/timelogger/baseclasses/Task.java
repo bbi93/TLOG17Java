@@ -60,7 +60,7 @@ public class Task {
 	/**
 	 *
 	 * @return long Elapsed time in minutes between startTime and endTime
-	 * @throws EmptyTimeFieldException
+	 * @throws EmptyTimeFieldException On task's one of both time field is not setted.
 	 */
 	public long getMinPerTask() throws EmptyTimeFieldException {
 		long startTimeInMinutes = (this.getStartTime().getHour() * 60) + (this.getStartTime().getMinute());
