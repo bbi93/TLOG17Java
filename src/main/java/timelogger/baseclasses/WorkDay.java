@@ -1,5 +1,6 @@
 package timelogger.baseclasses;
 
+import timelogger.exceptions.FutureWorkException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -53,6 +54,11 @@ public class WorkDay {
 		this.setActualDay(actualDay);
 	}
 
+	/**
+	 *
+	 * @return long Returns with sum fo all tasks elapsed time in minutes.
+	 * @throws EmptyTimeFieldException On some task one or both time field is empty.
+	 */
 	public long getSumPerDay() throws EmptyTimeFieldException {
 		long daySum = 0;
 		for (Task task : tasks) {
@@ -89,6 +95,12 @@ public class WorkDay {
 		return getSumPerDay() - getRequiredMinPerDay();
 	}
 
+	/**
+	 *
+	 * @param t Parameter is the specified task object to required to add to workday.
+	 * @throws NotSeparatedTimesException On given task's startTime or endTime is in conflict with already added tasks time fields or its intervals.
+	 * @throws EmptyTimeFieldException On given task's one of both time field is not setted.
+	 */
 	public void addTask(Task t) throws NotSeparatedTimesException, EmptyTimeFieldException {
 		if (Util.isSeparatedTime(t, this.getTasks())) {
 			tasks.add(t);
@@ -97,6 +109,11 @@ public class WorkDay {
 		}
 	}
 
+	/**
+	 *
+	 * @return Task This method returns the task which is the last of the workday.
+	 * @throws NoTaskDeclaredException On task list is empty.
+	 */
 	public Task getLatestTaskOfDay() throws NoTaskDeclaredException {
 		List<Task> tasksInDay = this.getTasks();
 		if (tasksInDay.size() > 0) {
@@ -115,6 +132,12 @@ public class WorkDay {
 		throw new NoTaskDeclaredException("No task in this workday.");
 	}
 
+	/**
+	 *
+	 * @return LocalTime Returns the finish time of the last task of workday.
+	 * @throws EmptyTimeFieldException On task list has task which has unsetted time field.
+	 * @throws NoTaskDeclaredException On task list is empty.
+	 */
 	public LocalTime endTimeOfTheLastTask() throws EmptyTimeFieldException, NoTaskDeclaredException {
 		Task task = this.getLatestTaskOfDay();
 		return task.getEndTime();
