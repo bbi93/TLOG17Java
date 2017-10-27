@@ -1,6 +1,6 @@
 package timelogger.baseclasses;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class TimeLogger {
 
-	private List<WorkMonth> months = new ArrayList<>();
+	private List<WorkMonth> months = new LinkedList<>();
 
 	public void addMonth(WorkMonth wm) {
 		if (isNewMonth(wm)) {

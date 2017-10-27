@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import timelogger.exceptions.EmptyTimeFieldException;
 import timelogger.utils.Util;
 
@@ -16,6 +17,7 @@ import timelogger.utils.Util;
  * @author bbi93
  */
 @Getter
+@NoArgsConstructor
 public class Task {
 
 	private String taskId;

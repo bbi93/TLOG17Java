@@ -2,12 +2,15 @@ package timelogger.ui;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import timelogger.exceptions.FutureWorkException;
 import timelogger.baseclasses.Task;
@@ -29,13 +32,14 @@ import timelogger.exceptions.WeekendNotEnabledException;
  */
 public class TimeLoggerUI {
 
+	private static Scanner sc = new Scanner(System.in);
 	private static TimeLogger timelogger = new TimeLogger();
 
 	public static void main(String[] args) {
 		int option = 0;
 		do {
 			printMenu();
-			option = askForInputOption("Enter the number of choosen option (0-10): ");
+			option = askForInputIntegerWithConstraits("Enter the number of choosen option (0-10): ", 0, 10);
 			doOption(option);
 		} while (option != 0);
 	}
@@ -55,47 +59,91 @@ public class TimeLoggerUI {
 			+ "10. Statistics" + "\n");
 	}
 
-	private static int askForInputOption(String ask) {
-		System.out.println(ask);
-		Scanner sc = new Scanner(System.in);
-		sc.findInLine(Pattern.compile("(\\d+)"));
-		return Integer.parseInt(sc.match().group(1));
-	}
-
 	private static int askForInputInteger(String ask) {
 		System.out.println(ask);
-		Scanner sc = new Scanner(System.in);
-		sc.findInLine(Pattern.compile("(\\d+)"));
-		return Integer.parseInt(sc.match().group(1));
+		int returnValue = Integer.MIN_VALUE;
+		try {
+			returnValue = sc.nextInt();
+		} catch (InputMismatchException ime) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "Not float or double in input!", ime);
+			askForInputInteger(ask);
+		} catch (NoSuchElementException | IllegalStateException ex) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No input entered, or cannot be read input!", ex);
+			askForInputInteger(ask);
+		}
+		return returnValue;
+	}
+
+	private static int askForInputIntegerWithConstraits(String ask, int minValue, int maxValue) {
+		int returnValue = askForInputInteger(ask);
+		if (returnValue >= minValue && returnValue <= maxValue) {
+			return returnValue;
+		} else {
+			return askForInputIntegerWithConstraits(ask, minValue, maxValue);
+		}
 	}
 
 	private static double askForInputDouble(String ask) {
 		System.out.println(ask);
-		Scanner sc = new Scanner(System.in);
-		sc.findInLine(Pattern.compile("(\\d+\\.\\d+)"));
-		return Double.parseDouble(sc.match().group(1));
+		double returnValue = Double.MIN_VALUE;
+		try {
+			returnValue = sc.nextDouble();
+		} catch (InputMismatchException ime) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "Not float or double in input!", ime);
+			askForInputDouble(ask);
+		} catch (NoSuchElementException | IllegalStateException ex) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No input entered, or cannot be read input!", ex);
+			askForInputDouble(ask);
+		}
+		return returnValue;
+	}
+
+	private static double askForInputDoubleWithConstraits(String ask, double minValue, double maxValue) {
+		double returnValue = askForInputDouble(ask);
+		if (returnValue >= minValue && returnValue <= maxValue) {
+			return returnValue;
+		} else {
+			return askForInputDoubleWithConstraits(ask, minValue, maxValue);
+		}
 	}
 
 	private static String askForInputString(String ask) {
+		System.out.println(ask);
+		String returnValue = "";
 		try {
-			System.out.println(ask);
-			Scanner sc = new Scanner(System.in);
 			return sc.nextLine();
-		} catch (NoSuchElementException nsee) {
-			System.err.println(nsee.getMessage());
-			return "";
+		} catch (IllegalStateException ise) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "Cannot be read input!", ise);
+			askForInputString(ask);
+		} catch (NoSuchElementException nse) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No input entered!", nse);
 		}
+		return returnValue;
+	}
+
+	private static String askForInputStringWithFormatConstrait(String ask, String expectedFormat) {
+		String returnValue;
+		Matcher matcher;
+		do {
+			returnValue = askForInputString(ask);
+			matcher = Pattern.compile(expectedFormat).matcher(returnValue);
+		} while (!matcher.find() || !(matcher.start() == 0 && matcher.end() == returnValue.length()) || returnValue.isEmpty());
+		return returnValue;
 	}
 
 	private static boolean askForInputboolean(String ask) {
+		System.out.println(ask);
+		boolean returnValue = false;
 		try {
-			System.out.println(ask);
-			Scanner sc = new Scanner(System.in);
 			return sc.nextBoolean();
-		} catch (NoSuchElementException nsee) {
-			System.err.println(nsee.getMessage());
-			return false;
+		} catch (InputMismatchException ime) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "Not valid boolean in input!", ime);
+			askForInputboolean(ask);
+		} catch (NoSuchElementException | IllegalStateException ex) {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No input entered, or cannot be read input!", ex);
+			askForInputboolean(ask);
 		}
+		return returnValue;
 	}
 
 	private static void doOption(int option) {
@@ -103,7 +151,7 @@ public class TimeLoggerUI {
 			case 0:
 				break;
 			case 1:
-				listMonths();
+				listMonths(timelogger.getMonths());
 				break;
 			case 2:
 				listDays();
@@ -133,25 +181,43 @@ public class TimeLoggerUI {
 				printStatistics();
 				break;
 			default:
-				System.err.println("There's no option like: " + option + " !");
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, new StringBuilder().append("There's no option like: ").append(option).append(" !").toString());
 				break;
 		}
 	}
 
-	private static int listMonths() {
-		List<WorkMonth> months = timelogger.getMonths();
-		months.stream().forEach((month) -> {
-			System.out.println(months.indexOf(month)
-				+ ". " + month.getDate().getYear()
-				+ "-" + month.getDate().getMonth());
-		});
+	/**
+	 * Print Timelogger's workmonths.
+	 */
+	private static void listMonths(List<WorkMonth> months) {
+		if (monthsNumber(months) > 0) {
+			months.stream().forEach((month) -> {
+				System.out.println(months.indexOf(month)
+					+ ". " + month.getDate().getYear()
+					+ "-" + month.getDate().getMonth());
+			});
+		} else {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
+		}
+	}
+
+	/**
+	 * Return count of Timelogger's workmonths.
+	 *
+	 * @param months
+	 * @return int Number of listed months. This information can be useful to other methods.
+	 */
+	private static int monthsNumber(List<WorkMonth> months) {
 		return months.size();
 	}
 
+	/**
+	 * Print selected workmonth's workdays.
+	 */
 	private static void listDays() {
-		if (listMonths() > 0) {
-			int rowNumber = askForInputOption("Select one by row number: ");
-			List<WorkDay> days = timelogger.getMonths().get(rowNumber).getDays();
+		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
+		if (wm != null) {
+			List<WorkDay> days = wm.getDays();
 			days.stream().forEach((day) -> {
 				System.out.println(days.indexOf(day)
 					+ ". " + day.getActualDay().getYear()
@@ -159,125 +225,167 @@ public class TimeLoggerUI {
 					+ "-" + day.getActualDay().getDayOfMonth());
 			});
 		} else {
-			System.err.println("No month found!");
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
 	}
 
+	/**
+	 *
+	 * @param wmList List of workmonths which available to choose from.
+	 * @return WorkMonth The choosen workmonth.
+	 */
+	private static WorkMonth selectMonthByRowNumber(List<WorkMonth> wmList) {
+		if (monthsNumber(wmList) > 0) {
+			listMonths(wmList);
+			int rowNumber = askForInputIntegerWithConstraits("Select month by row number: ", 0, monthsNumber(wmList) - 1);
+			if (rowNumber < monthsNumber(wmList)) {
+				return wmList.get(rowNumber);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Ask month and day then list tasks of day.
+	 */
 	private static void listTasks() {
-		if (timelogger.getMonths().size() > 0) {
-			int monthNumber = askForInputInteger("Input month number: ");
-			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			if (monthWithMonthNumber.getDays().size() > 0) {
-				int dayNumber = askForInputInteger("Input day number: ");
-				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
-				dayWithDayNumber.getTasks().stream().forEach((task) -> {
+		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
+		if (wm != null) {
+			WorkDay wd = selectDayByRowNumber(wm.getDays());
+			if (wd != null) {
+				wd.getTasks().stream().forEach((task) -> {
 					System.out.println(task.toString());
 				});
 			} else {
-				System.err.println("No day available in this month.");
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
 			}
 		} else {
-			System.err.println("No month available.");
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
 	}
 
+	/**
+	 *
+	 * @param wmList List of workmonths which available to choose from.
+	 * @return WorkMonth The choosen workmonth.
+	 */
+	private static WorkDay selectDayByRowNumber(List<WorkDay> wdList) {
+		if (daysNumber(wdList) > 0) {
+			listDays();
+			int rowNumber = askForInputIntegerWithConstraits("Select day by row number: ", 0, daysNumber(wdList) - 1);
+			if (rowNumber < daysNumber(wdList)) {
+				return wdList.get(rowNumber);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Return count of specific workmonth's workdays.
+	 *
+	 * @param days
+	 * @return int Number of listed days. This information can be useful to other methods.
+	 */
+	private static int daysNumber(List<WorkDay> days) {
+		return days.size();
+	}
+
 	private static void addNewMonth() {
-		int yearNumber = askForInputInteger("Input year: ");
-		int monthNumber = askForInputInteger("Input month number: ");
-		timelogger.addMonth(new WorkMonth(LocalDate.now().getYear(), monthNumber));
+		int yearNumber = askForInputIntegerWithConstraits("Input year: ", 1970, LocalDate.now().getYear());
+		int monthNumber = askForInputIntegerWithConstraits("Input month number: ", 1, 12);
+		timelogger.addMonth(new WorkMonth(yearNumber, monthNumber));
 	}
 
 	private static void addDayToMonth() {
-		if (listMonths() > 0) {
-			int rowNumber = askForInputOption("Select month by row number: ");
-			WorkMonth month = timelogger.getMonths().get(rowNumber);
-			if (month != null) {
-				int dayNumber = askForInputInteger("Input day: ");
-				double requiredWorkingHours = askForInputDouble("Input working hours (default=7.5): ");
+		WorkMonth month = selectMonthByRowNumber(timelogger.getMonths());
+		if (month != null) {
+			int dayNumber = askForInputIntegerWithConstraits("Input day: ", 1, month.getDate().getMonth().maxLength());
+			double requiredWorkingHours = askForInputDoubleWithConstraits("Input working hours (default=7.5): ", 1 / 60, 24 * 60);
+			try {
 				if (requiredWorkingHours <= 0) {
-					try {
-						month.addWorkDay(new WorkDay(month.getDate().getYear(), rowNumber, dayNumber));
-					} catch (NegativeMinutesOfWorkException | DateTimeException | FutureWorkException | WeekendNotEnabledException ex) {
-						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
-					}
+					month.addWorkDay(new WorkDay(month.getDate().getYear(), month.getDate().getMonthValue(), dayNumber));
 				} else {
-					try {
-						month.addWorkDay(new WorkDay(Math.round(requiredWorkingHours * 60), month.getDate().getYear(), rowNumber, dayNumber));
-					} catch (NegativeMinutesOfWorkException | DateTimeException | FutureWorkException | WeekendNotEnabledException ex) {
-						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
-					}
+					month.addWorkDay(new WorkDay(Math.round(requiredWorkingHours * 60), month.getDate().getYear(), month.getDate().getMonthValue(), dayNumber));
 				}
-
+			} catch (NegativeMinutesOfWorkException | DateTimeException | FutureWorkException | WeekendNotEnabledException ex) {
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
 			}
 		}
 	}
 
 	private static void startTaskForDay() {
-		if (timelogger.getMonths().size() > 0) {
-			int monthNumber = askForInputInteger("Input month number: ");
-			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			if (monthWithMonthNumber.getDays().size() > 0) {
-				int dayNumber = askForInputInteger("Input day number: ");
-				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
-				String taskId = askForInputString("Input task id: ");
-				String taskComment = askForInputString("Input task comment: ");
-				Task lastTask = null;
-				try {
-					lastTask = dayWithDayNumber.getLatestTaskOfDay();
-				} catch (NoTaskDeclaredException ex) {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
-				}
-				String taskStartTime = null;
-				try {
-					if (!lastTask.equals(null)) {
-						taskStartTime = askForInputString("Input task start (default:" + lastTask.getEndTime().getHour() + ":" + lastTask.getEndTime().getMinute() + "): ");
-						if (taskStartTime.isEmpty()) {
-							taskStartTime = lastTask.getEndTime().getHour() + ":" + lastTask.getEndTime().getMinute();
-						}
-					} else {
-						taskStartTime = askForInputString("Input task start (format HH:MM):");
-						if (taskStartTime.isEmpty()) {
-							taskStartTime = "00:00";
-						}
-					}
-				} catch (EmptyTimeFieldException ex) {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
-				}
-				Task newTask = null;
-				try {
-					newTask = new Task(taskId);
+		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
+		if (wm != null) {
+			WorkDay wd = selectDayByRowNumber(wm.getDays());
+			if (wd != null) {
+				Task taskToStart = new Task();
+				//aks for taskId field
+				while (taskToStart.getTaskId() == null) {
 					try {
-						newTask.setStartTime(taskStartTime);
-					} catch (EmptyTimeFieldException ex) {
-						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+						taskToStart.setTaskId(askForInputString("Input task id: "));
+					} catch (InvalidTaskIdException | NoTaskIdException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
 					}
-					newTask.setComment(taskComment);
-				} catch (Exception ex) {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
 				}
+				//ask for comment field
+				while (taskToStart.getComment() == null) {
+					taskToStart.setComment(askForInputString("Input task comment: "));
+				}
+				//ask for start time field
+				boolean isCorrectstartTime = false;
+				while (!isCorrectstartTime) {
+					Task lastTaskOfDay = null;
+					String taskStartTime = null;
+					try {
+						lastTaskOfDay = wd.getLatestTaskOfDay();
+					} catch (NoTaskDeclaredException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.INFO, "Cant find 'last task'.", ex);
+					}
+					try {
+						if (lastTaskOfDay != null) {
+							taskStartTime = askForInputStringWithFormatConstrait("Input task start (default:"
+								+ lastTaskOfDay.getEndTime().getHour()
+								+ ":"
+								+ lastTaskOfDay.getEndTime().getMinute()
+								+ "): ", "\\d{2}:\\d{2}");
+							if (taskStartTime.isEmpty()) {
+								taskStartTime = lastTaskOfDay.getEndTime().getHour() + ":" + lastTaskOfDay.getEndTime().getMinute();
 
+							}
+						} else {
+							taskStartTime = askForInputStringWithFormatConstrait("Input task start (format HH:MM):", "\\d{2}:\\d{2}");
+							if (taskStartTime.isEmpty()) {
+								taskStartTime = "00:00";
+							}
+						}
+						taskToStart.setStartTime(taskStartTime);
+						isCorrectstartTime = true;
+					} catch (EmptyTimeFieldException ex) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+					}
+				}
+				//add just created task to workday
 				try {
-					dayWithDayNumber.addTask(newTask);
+					wd.addTask(taskToStart);
 				} catch (NotSeparatedTimesException | EmptyTimeFieldException ex) {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
 				}
 			} else {
-				System.err.println("No day available in this month.");
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
 			}
 		} else {
-			System.err.println("No month available.");
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
+
 	}
 
 	private static void finishTaskDay() {
-		if (timelogger.getMonths().size() > 0) {
-			int monthNumber = askForInputInteger("Input month number: ");
-			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			if (monthWithMonthNumber.getDays().size() > 0) {
-				int dayNumber = askForInputInteger("Input day number: ");
-				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
+		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
+		if (wm != null) {
+			WorkDay wd = selectDayByRowNumber(wm.getDays());
+			if (wd != null) {
 				List<Task> endlessTasks = new ArrayList<>();
-				for (Task task : dayWithDayNumber.getTasks()) {
+				for (Task task : wd.getTasks()) {
 					try {
 						task.getEndTime();
 					} catch (EmptyTimeFieldException e) {
@@ -288,33 +396,51 @@ public class TimeLoggerUI {
 					System.out.println(task.toString());
 				});
 				String taskId = askForInputString("Input task id: ");
-				Task choosenTask = endlessTasks.stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
+				LocalTime startTimeofChoosenTask = null;
+				while (startTimeofChoosenTask == null) {
+					startTimeofChoosenTask = LocalTime.parse(askForInputStringWithFormatConstrait("Input task start (format HH:MM):", "\\d{2}:\\d{2}"));
+				}
+				Task choosenTask = null;
+				for (Task endlessTask : endlessTasks) {
+					boolean isTaskIdSame = taskId.equals(endlessTask.getTaskId());
+					boolean isStartTimeSame = false;
+					try {
+						if (endlessTask.getStartTime().equals(startTimeofChoosenTask)) {
+							isStartTimeSame = true;
+						}
+					} catch (EmptyTimeFieldException etfe) {
+						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, etfe);
+					}
+					if (isTaskIdSame && isStartTimeSame) {
+						choosenTask = endlessTask;
+						break;
+					}
+				}
 				if (!choosenTask.equals(null)) {
 					try {
-						choosenTask.setEndTime(askForInputString("Input task start (format HH:MM):"));
+						choosenTask.setEndTime(askForInputString("Input task end time (format HH:MM):"));
+
 					} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
 						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
 					}
 				} else {
-					System.err.println("No unfinished task available in this workday.");
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No unfinished task available in this workday.");
 				}
 			} else {
-				System.err.println("No day available in this month.");
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
 			}
 		} else {
-			System.err.println("No month available.");
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
 	}
 
 	private static void deleteTask() {
-		if (timelogger.getMonths().size() > 0) {
-			int monthNumber = askForInputInteger("Input month number: ");
-			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			if (monthWithMonthNumber.getDays().size() > 0) {
-				int dayNumber = askForInputInteger("Input day number: ");
-				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
+		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
+		if (wm != null) {
+			WorkDay wd = selectDayByRowNumber(wm.getDays());
+			if (wd != null) {
 				String taskId = askForInputString("Input task id: ");
-				Task choosenTask = dayWithDayNumber.getTasks().stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
+				Task choosenTask = wd.getTasks().stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
 				if (!choosenTask.equals(null)) {
 					if (askForInputboolean("Are you sure to delete this task? (true/false):")) {
 						for (WorkMonth month : timelogger.getMonths()) {
@@ -328,25 +454,23 @@ public class TimeLoggerUI {
 						}
 					}
 				} else {
-					System.err.println("No task available to delete.");
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task available to delete.");
 				}
 			} else {
-				System.err.println("No day available in this month.");
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
 			}
 		} else {
-			System.err.println("No month available.");
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
 	}
 
 	private static void modifyTask() {
-		if (timelogger.getMonths().size() > 0) {
-			int monthNumber = askForInputInteger("Input month number: ");
-			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			if (monthWithMonthNumber.getDays().size() > 0) {
-				int dayNumber = askForInputInteger("Input day number: ");
-				WorkDay dayWithDayNumber = monthWithMonthNumber.getDays().stream().filter((day) -> day.getActualDay().getDayOfMonth() == dayNumber).findFirst().get();
+		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
+		if (wm != null) {
+			WorkDay wd = selectDayByRowNumber(wm.getDays());
+			if (wd != null) {
 				String taskId = askForInputString("Input task id: ");
-				Task choosenTask = dayWithDayNumber.getTasks().stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
+				Task choosenTask = wd.getTasks().stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
 				if (!choosenTask.equals(null)) {
 					for (WorkMonth month : timelogger.getMonths()) {
 						for (WorkDay day : month.getDays()) {
@@ -363,35 +487,39 @@ public class TimeLoggerUI {
 										newTaskEndTime = newTaskEndTime.isEmpty() ? choosenTask.getEndTime().toString() : newTaskEndTime;
 										try {
 											task.setTaskId(newTaskId);
+
 										} catch (InvalidTaskIdException | NoTaskIdException ex) {
-											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
 										}
 										task.setComment(newTaskComment);
 										try {
 											task.setStartTime(newTaskStartTime);
+
 										} catch (EmptyTimeFieldException ex) {
-											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
 										}
 										try {
 											task.setEndTime(newTaskEndTime);
+
 										} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
-											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+
 										}
 									} catch (EmptyTimeFieldException ex) {
-										Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+										Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
 									}
 								}
 							}
 						}
 					}
 				} else {
-					System.err.println("No task available to delete.");
+					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task available to modify.");
 				}
 			} else {
-				System.err.println("No day available in this month.");
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
 			}
 		} else {
-			System.err.println("No month available.");
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
 	}
 
@@ -405,15 +533,19 @@ public class TimeLoggerUI {
 					+ monthWithMonthNumber.getRequiredMinPerMonth() + "/"
 					+ monthWithMonthNumber.getSumPerMonth() + "/"
 					+ monthWithMonthNumber.getExtraMinPerMonth());
+
 			} catch (EmptyTimeFieldException ex) {
-				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(TimeLoggerUI.class
+					.getName()).log(Level.WARNING, null, ex);
 			}
 			System.out.println("Days statistics:");
 			for (WorkDay workDay : monthWithMonthNumber.getDays()) {
 				try {
 					System.out.println(workDay.toStatistics());
+
 				} catch (EmptyTimeFieldException ex) {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
+					Logger.getLogger(TimeLoggerUI.class
+						.getName()).log(Level.WARNING, null, ex);
 				}
 			}
 		} else {
