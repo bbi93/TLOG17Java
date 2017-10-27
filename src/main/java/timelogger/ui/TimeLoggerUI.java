@@ -380,6 +380,111 @@ public class TimeLoggerUI {
 	}
 
 	private static void finishTaskDay() {
+		Task choosenTask = chooseExistingTask();
+		if (!choosenTask.equals(null)) {
+			try {
+				choosenTask.setEndTime(askForInputString("Input task end time (format HH:MM):"));
+			} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task has benn finished!", ex);
+			}
+		} else {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No unfinished task available in this workday.");
+		}
+	}
+
+	private static void deleteTask() {
+		Task choosenTask = chooseExistingTask();
+		if (!choosenTask.equals(null)) {
+			if (askForInputboolean("Are you sure to delete this task? (true/false):")) {
+				for (WorkMonth month : timelogger.getMonths()) {
+					for (WorkDay day : month.getDays()) {
+						for (Task task : day.getTasks()) {
+							if (task.equals(choosenTask)) {
+								day.getTasks().remove(task);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task available to delete.");
+		}
+	}
+
+	private static void modifyTask() {
+		Task choosenTask = chooseExistingTask();
+		if (!choosenTask.equals(null)) {
+			for (WorkMonth month : timelogger.getMonths()) {
+				for (WorkDay day : month.getDays()) {
+					for (Task task : day.getTasks()) {
+						if (task.equals(choosenTask)) {
+							try {
+								String newTaskId = askForInputString("Input task's new id: ");
+								newTaskId = newTaskId.isEmpty() ? choosenTask.getTaskId() : newTaskId;
+								String newTaskComment = askForInputString("Input task's new comment: ");
+								newTaskComment = newTaskComment.isEmpty() ? choosenTask.getComment() : newTaskComment;
+								String newTaskStartTime = askForInputString("Input task's new start time (format HH:MM):");
+								newTaskStartTime = newTaskStartTime.isEmpty() ? choosenTask.getStartTime().toString() : newTaskStartTime;
+								String newTaskEndTime = askForInputString("Input task's new end time (format HH:MM):");
+								newTaskEndTime = newTaskEndTime.isEmpty() ? choosenTask.getEndTime().toString() : newTaskEndTime;
+								try {
+									task.setTaskId(newTaskId);
+								} catch (InvalidTaskIdException | NoTaskIdException ex) {
+									Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+								}
+								task.setComment(newTaskComment);
+								try {
+									task.setStartTime(newTaskStartTime);
+								} catch (EmptyTimeFieldException ex) {
+									Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+								}
+								try {
+									task.setEndTime(newTaskEndTime);
+								} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
+									Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+								}
+							} catch (EmptyTimeFieldException ex) {
+								Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task available to modify.");
+		}
+	}
+
+	private static void printStatistics() {
+		if (timelogger.getMonths().size() > 0) {
+			int monthNumber = askForInputInteger("Input month number: ");
+			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
+			try {
+				System.out.println(monthNumber
+					+ ". month has " + monthWithMonthNumber.getDays().size() + " workdays. Required mins/Sum mins/Extra mins "
+					+ monthWithMonthNumber.getRequiredMinPerMonth() + "/"
+					+ monthWithMonthNumber.getSumPerMonth() + "/"
+					+ monthWithMonthNumber.getExtraMinPerMonth());
+
+			} catch (EmptyTimeFieldException ex) {
+				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
+			}
+			System.out.println("Days statistics:");
+			for (WorkDay workDay : monthWithMonthNumber.getDays()) {
+				try {
+					System.out.println(workDay.toStatistics());
+				} catch (EmptyTimeFieldException ex) {
+					Logger.getLogger(TimeLoggerUI.class
+						.getName()).log(Level.WARNING, null, ex);
+				}
+			}
+		} else {
+			System.err.println("No month available.");
+		}
+	}
+
+	private static Task chooseExistingTask() {
+		Task choosenTask = null;
 		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
 		if (wm != null) {
 			WorkDay wd = selectDayByRowNumber(wm.getDays());
@@ -400,7 +505,6 @@ public class TimeLoggerUI {
 				while (startTimeofChoosenTask == null) {
 					startTimeofChoosenTask = LocalTime.parse(askForInputStringWithFormatConstrait("Input task start (format HH:MM):", "\\d{2}:\\d{2}"));
 				}
-				Task choosenTask = null;
 				for (Task endlessTask : endlessTasks) {
 					boolean isTaskIdSame = taskId.equals(endlessTask.getTaskId());
 					boolean isStartTimeSame = false;
@@ -416,141 +520,13 @@ public class TimeLoggerUI {
 						break;
 					}
 				}
-				if (!choosenTask.equals(null)) {
-					try {
-						choosenTask.setEndTime(askForInputString("Input task end time (format HH:MM):"));
-
-					} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
-						Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.SEVERE, null, ex);
-					}
-				} else {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No unfinished task available in this workday.");
-				}
 			} else {
 				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
 			}
 		} else {
 			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
 		}
-	}
-
-	private static void deleteTask() {
-		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
-		if (wm != null) {
-			WorkDay wd = selectDayByRowNumber(wm.getDays());
-			if (wd != null) {
-				String taskId = askForInputString("Input task id: ");
-				Task choosenTask = wd.getTasks().stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
-				if (!choosenTask.equals(null)) {
-					if (askForInputboolean("Are you sure to delete this task? (true/false):")) {
-						for (WorkMonth month : timelogger.getMonths()) {
-							for (WorkDay day : month.getDays()) {
-								for (Task task : day.getTasks()) {
-									if (task.getTaskId().equals(choosenTask.getTaskId())) {
-										day.getTasks().remove(task);
-									}
-								}
-							}
-						}
-					}
-				} else {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task available to delete.");
-				}
-			} else {
-				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
-			}
-		} else {
-			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
-		}
-	}
-
-	private static void modifyTask() {
-		WorkMonth wm = selectMonthByRowNumber(timelogger.getMonths());
-		if (wm != null) {
-			WorkDay wd = selectDayByRowNumber(wm.getDays());
-			if (wd != null) {
-				String taskId = askForInputString("Input task id: ");
-				Task choosenTask = wd.getTasks().stream().filter((task) -> task.getTaskId().equals(taskId)).findFirst().get();
-				if (!choosenTask.equals(null)) {
-					for (WorkMonth month : timelogger.getMonths()) {
-						for (WorkDay day : month.getDays()) {
-							for (Task task : day.getTasks()) {
-								if (task.getTaskId().equals(choosenTask.getTaskId())) {
-									try {
-										String newTaskId = askForInputString("Input task's new id: ");
-										newTaskId = newTaskId.isEmpty() ? choosenTask.getTaskId() : newTaskId;
-										String newTaskComment = askForInputString("Input task's new comment: ");
-										newTaskComment = newTaskComment.isEmpty() ? choosenTask.getComment() : newTaskComment;
-										String newTaskStartTime = askForInputString("Input task's new start time (format HH:MM):");
-										newTaskStartTime = newTaskStartTime.isEmpty() ? choosenTask.getStartTime().toString() : newTaskStartTime;
-										String newTaskEndTime = askForInputString("Input task's new end time (format HH:MM):");
-										newTaskEndTime = newTaskEndTime.isEmpty() ? choosenTask.getEndTime().toString() : newTaskEndTime;
-										try {
-											task.setTaskId(newTaskId);
-
-										} catch (InvalidTaskIdException | NoTaskIdException ex) {
-											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
-										}
-										task.setComment(newTaskComment);
-										try {
-											task.setStartTime(newTaskStartTime);
-
-										} catch (EmptyTimeFieldException ex) {
-											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
-										}
-										try {
-											task.setEndTime(newTaskEndTime);
-
-										} catch (NotExpectedTimeOrderException | EmptyTimeFieldException ex) {
-											Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
-
-										}
-									} catch (EmptyTimeFieldException ex) {
-										Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, null, ex);
-									}
-								}
-							}
-						}
-					}
-				} else {
-					Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No task available to modify.");
-				}
-			} else {
-				Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No day available.");
-			}
-		} else {
-			Logger.getLogger(TimeLoggerUI.class.getName()).log(Level.WARNING, "No month available.");
-		}
-	}
-
-	private static void printStatistics() {
-		if (timelogger.getMonths().size() > 0) {
-			int monthNumber = askForInputInteger("Input month number: ");
-			WorkMonth monthWithMonthNumber = timelogger.getMonths().stream().filter((month) -> month.getDate().getMonthValue() == monthNumber).findFirst().get();
-			try {
-				System.out.println(monthNumber
-					+ ". month has " + monthWithMonthNumber.getDays().size() + " workdays. Required mins/Sum mins/Extra mins "
-					+ monthWithMonthNumber.getRequiredMinPerMonth() + "/"
-					+ monthWithMonthNumber.getSumPerMonth() + "/"
-					+ monthWithMonthNumber.getExtraMinPerMonth());
-
-			} catch (EmptyTimeFieldException ex) {
-				Logger.getLogger(TimeLoggerUI.class
-					.getName()).log(Level.WARNING, null, ex);
-			}
-			System.out.println("Days statistics:");
-			for (WorkDay workDay : monthWithMonthNumber.getDays()) {
-				try {
-					System.out.println(workDay.toStatistics());
-
-				} catch (EmptyTimeFieldException ex) {
-					Logger.getLogger(TimeLoggerUI.class
-						.getName()).log(Level.WARNING, null, ex);
-				}
-			}
-		} else {
-			System.err.println("No month available.");
-		}
+		return choosenTask;
 	}
 
 }
